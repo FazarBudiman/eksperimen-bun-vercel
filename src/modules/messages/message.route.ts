@@ -1,4 +1,4 @@
-import Elysia from "elysia";
+import { Elysia } from "elysia";
 import { MessageController } from "./messages.controller";
 import { MessageCreateModels } from "./messages.model";
 
