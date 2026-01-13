@@ -1,5 +1,5 @@
 // import { supabase } from "../../db/supabase";
-import { pool } from "../../db/pool";
+import { pool } from "../../supabase/pool";
 import { MessageCreateProps } from "./messages.model";
 
 export class MessageService {
