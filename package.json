@@ -7,7 +7,9 @@
     "dev": "bun run --watch src/index.ts"
   },
   "dependencies": {
-    "elysia": "latest",
+    "@elysiajs/cookie": "^0.3.0-rc.3",
+    "@supabase/supabase-js": "^2.90.1",
+    "elysia": "^1.2.0-rc.3",
     "pg": "^8.16.3"
   },
   "devDependencies": {
