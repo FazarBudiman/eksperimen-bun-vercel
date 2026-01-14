@@ -47,12 +47,8 @@ const App = new Elysia()
     }
   })
 
-  .get('/', () => 'Hello Elysia')
-  .get('/about', () => 'About Elysia')
+  .get('/', () => 'The King is Back')
   .use(auth)
   .use(message)
 
 export default App
-// console.log(
-//   `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`
-// );

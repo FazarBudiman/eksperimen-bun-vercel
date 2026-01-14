@@ -22,7 +22,7 @@ export const auth = (app: Elysia) =>
         }
       )
 
-      .post(
+      .put(
         '/refresh',
         async ({ body, accessToken, refreshToken }) => {
           const res = AuthController.refreshController(
