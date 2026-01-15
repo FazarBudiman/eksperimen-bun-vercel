@@ -89,7 +89,7 @@ export class UserService {
 
   static async deleteUserById(userId: string) {
     const { rows } = await supabasePool.query(
-      `UPDATE users SET is_deleted = true WHERE users_id = $1 RETURNING users_id`,
+      `UPDATE users SET is_deleted = true WHERE users_id = $1 RETURNING username`,
       [userId]
     )
     return rows[0]

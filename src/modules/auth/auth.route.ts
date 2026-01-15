@@ -19,6 +19,10 @@ export const auth = (app: Elysia) =>
         },
         {
           body: SignInModel,
+          detail: {
+            tags: ['Auth'],
+            summary: 'Sign In',
+          },
         }
       )
 
@@ -34,6 +38,10 @@ export const auth = (app: Elysia) =>
         },
         {
           body: RefreshTokenModel,
+          detail: {
+            tags: ['Auth'],
+            summary: 'Refresh Access Token',
+          },
         }
       )
       .delete(
@@ -44,6 +52,10 @@ export const auth = (app: Elysia) =>
         },
         {
           body: RefreshTokenModel,
+          detail: {
+            tags: ['Auth'],
+            summary: 'Sign Out',
+          },
         }
       )
   )

@@ -1,8 +1,8 @@
-import { supabaseStorage } from '../supabase/supabaseStorage'
+import { supabaseStorage } from '../../supabase/supabaseStorage'
 
 const { BUCKET_NAME } = process.env
 
-export const uploadToStorage = async (file: File, folderName: string) => {
+export const upload = async (file: File, folderName: string) => {
   const filePath = `${folderName}/${crypto.randomUUID()}-${file.name}`
 
   // 1. Upload file

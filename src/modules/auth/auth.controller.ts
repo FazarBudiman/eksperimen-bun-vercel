@@ -1,5 +1,7 @@
 import { BadRequest } from '../../exceptions/client.error'
+import { ApiResponse } from '../../types/response.type'
 import { Role } from '../../types/role.type'
+import { ResponseHelper } from '../../utils/responseHelper'
 import { RefreshTokenProps, SignInProps } from './auth.model'
 import { AuthService } from './auth.service'
 
@@ -12,7 +14,7 @@ export class AuthController {
     refreshToken: {
       sign: (payload: { user_id: string }) => Promise<string>
     }
-  ) {
+  ): Promise<ApiResponse> {
     const user = await AuthService.verifyUserCredential(payload)
 
     const access_token = await accessToken.sign({
@@ -26,14 +28,10 @@ export class AuthController {
 
     await AuthService.saveRefreshToken(refresh_token)
 
-    return {
-      status: 'success',
-      message: 'Sign In Berhasil',
-      data: {
-        access_token,
-        refresh_token,
-      },
-    }
+    return ResponseHelper.success('Sign in berhasil', {
+      access_token,
+      refresh_token,
+    })
   }
 
   static async refreshController(
@@ -44,7 +42,7 @@ export class AuthController {
     refreshToken: {
       verify: (token?: string) => Promise<any>
     }
-  ) {
+  ): Promise<ApiResponse> {
     const { refresh_token } = payload
 
     // 1. Verify refresh token JWT
@@ -62,23 +60,19 @@ export class AuthController {
       user_role: decoded.user_role,
     })
 
-    return {
-      status: 'success',
-      data: {
-        access_token: newAccessToken,
-      },
-    }
+    return ResponseHelper.success('Memperbarui access token berhasil', {
+      access_token: newAccessToken,
+    })
   }
 
-  static async signOutController(payload: RefreshTokenProps) {
+  static async signOutController(
+    payload: RefreshTokenProps
+  ): Promise<ApiResponse> {
     const { refresh_token } = payload
     await AuthService.verifyRefreshTokenExist(refresh_token)
 
     await AuthService.deleteRefreshToken(refresh_token)
 
-    return {
-      status: 'success',
-      message: 'Sign Out Berhasil',
-    }
+    return ResponseHelper.success('Sign out berhasil')
   }
 }

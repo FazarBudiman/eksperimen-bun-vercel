@@ -17,6 +17,10 @@ export const mentor = new Elysia().group('/mentors', (app) =>
       {
         beforeHandle: requireAuth(['ADMIN', 'SUPER_ADMIN']),
         body: MentorUploadModel,
+        detail: {
+          tags: ['Mentor'],
+          summary: 'Upload Profile Picture Mentor',
+        },
       }
     )
 
@@ -33,6 +37,10 @@ export const mentor = new Elysia().group('/mentors', (app) =>
       {
         beforeHandle: requireAuth(['ADMIN', 'SUPER_ADMIN']),
         body: MentorCreateModel,
+        detail: {
+          tags: ['Mentor'],
+          summary: 'Create a New Mentor',
+        },
       }
     )
 
@@ -44,6 +52,10 @@ export const mentor = new Elysia().group('/mentors', (app) =>
       },
       {
         beforeHandle: requireAuth(['ADMIN', 'SUPER_ADMIN']),
+        detail: {
+          tags: ['Mentor'],
+          summary: 'Get All Mentors',
+        },
       }
     )
 
@@ -60,6 +72,10 @@ export const mentor = new Elysia().group('/mentors', (app) =>
       {
         beforeHandle: requireAuth(['ADMIN', 'SUPER_ADMIN']),
         body: MentorCreateModel,
+        detail: {
+          tags: ['Mentor'],
+          summary: 'Update Mentor by Id',
+        },
       }
     )
 
@@ -73,6 +89,10 @@ export const mentor = new Elysia().group('/mentors', (app) =>
       },
       {
         beforeHandle: requireAuth(['ADMIN', 'SUPER_ADMIN']),
+        detail: {
+          tags: ['Mentor'],
+          summary: 'Delete Mentor by Id',
+        },
       }
     )
 )

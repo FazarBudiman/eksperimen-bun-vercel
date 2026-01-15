@@ -1,6 +1,6 @@
 import { Role } from '../types/role.type'
 import { UnauthorizedError, ForbiddenError } from '../exceptions/auth.error'
-import { AccessTokenPayload } from '../types/jwtPayload.type'
+import { AccessTokenPayload } from '../types/jwt.type'
 import { AuthUser } from '../types/auth.type'
 
 export const requireAuth = (roles?: Role | Role[]) => async (ctx: any) => {

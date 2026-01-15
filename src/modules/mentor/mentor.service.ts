@@ -49,7 +49,7 @@ export class MentorService {
     const { mentorName, jobTitle, companyName, expertise, profileUrl } = payload
     const { rows } = await supabasePool.query(
       `UPDATE mentors SET mentors_name = $1, job_title = $2, company_name = $3, expertise = $4, profile_url = $5, updated_by = $6, updated_date = NOW() 
-        WHERE mentors_id = $7 RETURNING mentors_id`,
+        WHERE mentors_id = $7 RETURNING mentors_name`,
       [
         mentorName,
         jobTitle,
@@ -65,7 +65,7 @@ export class MentorService {
 
   static async deleteMentor(mentorId: string) {
     const { rows } = await supabasePool.query(
-      `UPDATE mentors SET is_deleted = TRUE WHERE mentors_id = $1 RETURNING mentors_id`,
+      `UPDATE mentors SET is_deleted = TRUE WHERE mentors_id = $1 RETURNING mentors_name`,
       [mentorId]
     )
     return rows[0]

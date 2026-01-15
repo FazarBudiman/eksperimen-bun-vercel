@@ -1,62 +1,56 @@
+import { upload } from '../../shared/services/upload'
 import { AuthUser } from '../../types/auth.type'
-import { uploadToStorage } from '../../utils/uploadToStorage'
+import { ApiResponse } from '../../types/response.type'
+import { ResponseHelper } from '../../utils/responseHelper'
 import { MentorCreateProps } from './mentor.model'
 import { MentorService } from './mentor.service'
 
 export class MentorController {
-  static async uploadProfileController(profile: File) {
-    const urlProfile = await uploadToStorage(profile, '/mentor')
-    return {
-      status: 'success',
-      data: {
-        urlProfile,
-      },
-    }
+  static async uploadProfileController(profile: File): Promise<ApiResponse> {
+    const urlProfile = await upload(profile, '/mentor')
+
+    return ResponseHelper.success('Upload profile mentor berhasil', urlProfile)
   }
 
-  static async addMentorController(payload: MentorCreateProps, user: AuthUser) {
+  static async addMentorController(
+    payload: MentorCreateProps,
+    user: AuthUser
+  ): Promise<ApiResponse> {
     const { mentors_id } = await MentorService.addMentor(payload, user.user_id)
-    return {
-      status: 'success',
-      data: {
-        mentors_id,
-      },
-    }
+
+    return ResponseHelper.created('Menambah mentor berhasil', mentors_id)
   }
 
-  static async getAllMentorController() {
+  static async getAllMentorController(): Promise<ApiResponse> {
     const mentors = await MentorService.getAllMentor()
-    return {
-      status: 'success',
-      data: mentors,
-    }
+
+    return ResponseHelper.success(
+      'Mengambil semua data mentor berhasil',
+      mentors
+    )
   }
 
   static async updateMentorController(
     mentorId: string,
     payload: MentorCreateProps,
     user: AuthUser
-  ) {
+  ): Promise<ApiResponse> {
     await MentorService.getMentorById(mentorId)
-    const { mentors_id } = await MentorService.updateMentor(
+    const { mentors_name } = await MentorService.updateMentor(
       mentorId,
       payload,
       user.user_id
     )
-    return {
-      status: 'success',
-      data: {
-        mentors_id,
-      },
-    }
+
+    return ResponseHelper.success(
+      `Memperbarui mentor: ${mentors_name} berhasil`
+    )
   }
 
-  static async deleteMentorController(mentorId: string) {
+  static async deleteMentorController(mentorId: string): Promise<ApiResponse> {
     await MentorService.getMentorById(mentorId)
-    const mentor = await MentorService.deleteMentor(mentorId)
-    return {
-      status: 'success',
-      data: mentor,
-    }
+    const { mentors_name } = await MentorService.deleteMentor(mentorId)
+
+    return ResponseHelper.success(`Menghapus mentor: ${mentors_name} berhasil`)
   }
 }

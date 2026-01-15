@@ -12,10 +12,15 @@ const App = new Elysia()
   .use(
     swagger({
       documentation: {
+        info: {
+          title: 'Dokumentasi API CMS Arutala',
+          version: '1.0.0',
+        },
         tags: [
           { name: 'Auth', description: 'Authentication Endpoint' },
-          { name: 'Message', description: 'Message Endpoint' },
           { name: 'User', description: 'User Endpoint' },
+          { name: 'Message', description: 'Message Endpoint' },
+          { name: 'Mentor', description: 'Mentor Endpoint' },
         ],
       },
     })
@@ -26,10 +31,9 @@ const App = new Elysia()
     if (error instanceof HttpError) {
       set.status = error.status
       return {
-        status: 'fail',
-        code: error.code,
+        success: false,
+        statusCode: `${error.status} ${error.code}`,
         message: error.message,
-        fields: error.fields,
       }
     }
 
@@ -41,26 +45,27 @@ const App = new Elysia()
         })) || []
 
       return {
-        status: 'fail',
-        code: 'VALIDATION_ERROR',
+        success: false,
+        statusCode: `${error.status} ${error.code}`,
         message: 'Invalid request data',
-        fields: errors,
+        details: errors,
       }
     }
 
     if (code === 'NOT_FOUND') {
       set.status = 404
       return {
-        status: 'fail',
-        code: 'NOT_FOUND',
+        success: false,
+        statusCode: `${error.status} ${error.code}`,
         message: 'Route Not Found',
       }
     }
+    console.log(code)
 
     set.status = 500
     return {
-      status: 'fail',
-      code: 'INTERNAL_SERVER_ERROR',
+      success: false,
+      statusCode: '500 INTERNAL_SERVER_ERROR',
       message: error.message,
     }
   })
@@ -68,8 +73,8 @@ const App = new Elysia()
   // Route Endpoint
   .get('/', () => 'The King is Back')
   .use(auth)
-  .use(message)
   .use(user)
+  .use(message)
   .use(mentor)
 
 export default App

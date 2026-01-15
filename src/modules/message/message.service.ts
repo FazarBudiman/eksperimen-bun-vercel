@@ -34,8 +34,10 @@ export class MessageService {
 
   static async getAllMessage() {
     const { rows } = await supabasePool.query(
-      `SELECT messages_id, sender_name, sender_email, sender_phone, organization_name, status, subject, message_body, created_date AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta'
-          FROM messages WHERE is_deleted = false ORDER BY created_date DESC`
+      `SELECT messages_id, sender_name, sender_email, sender_phone, organization_name, status, subject, message_body, created_date AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' AS created_date
+          FROM messages 
+          WHERE is_deleted = false 
+          ORDER BY created_date DESC`
     )
     return rows
   }
@@ -63,8 +65,10 @@ export class MessageService {
     userWhoUpdated: string
   ) {
     const { rows } = await supabasePool.query(
-      `UPDATE messages SET status = $1, updated_by = $2, updated_date = NOW() WHERE messages_id = $3 
-                RETURNING messages_id, sender_name, sender_email, sender_phone, organization_name, status, subject, message_body, created_date`,
+      `UPDATE messages 
+        SET status = $1, updated_by = $2, updated_date = NOW() 
+        WHERE messages_id = $3 
+        RETURNING sender_name`,
       [payload.status, userWhoUpdated, messageId]
     )
     return rows[0]
@@ -76,6 +80,6 @@ export class MessageService {
       [messageId]
     )
 
-    return rows[0].sender_name
+    return rows[0]
   }
 }
