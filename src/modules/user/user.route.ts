@@ -2,29 +2,12 @@ import { bearer } from '@elysiajs/bearer'
 import { Elysia } from 'elysia'
 import { requireAuth } from '../../guards/auth.guard'
 import { assertAuth } from '../../utils/assertAuth'
-import { UserCreateModel, UserUploadModel } from './user.model'
+import { UserCreateModel } from './user.model'
 import { UserController } from './user.controller'
 
 export const user = new Elysia().group('/users', (app) =>
   app
     .use(bearer())
-    .post(
-      '/upload',
-      async ({ body }) => {
-        const res = await UserController.uploadProfileUserController(
-          body.profile
-        )
-        return res
-      },
-      {
-        body: UserUploadModel,
-        beforeHandle: requireAuth('SUPER_ADMIN'),
-        detail: {
-          tags: ['User'],
-          summary: 'Upload Profile User',
-        },
-      }
-    )
     .post(
       '/',
       async ({ body, store, set }) => {

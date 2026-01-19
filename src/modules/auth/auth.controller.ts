@@ -18,12 +18,12 @@ export class AuthController {
     const user = await AuthService.verifyUserCredential(payload)
 
     const access_token = await accessToken.sign({
-      user_id: user.users_id,
-      user_role: user.roles_name,
+      user_id: user.user_id,
+      user_role: user.role_name,
     })
 
     const refresh_token = await refreshToken.sign({
-      user_id: user.users_id,
+      user_id: user.user_id,
     })
 
     await AuthService.saveRefreshToken(refresh_token)

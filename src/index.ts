@@ -60,7 +60,7 @@ const App = new Elysia()
         message: 'Route Not Found',
       }
     }
-    console.log(code)
+    console.log(error)
 
     set.status = 500
     return {
