@@ -6,19 +6,23 @@ import { supabasePool } from '../../supabase/supabasePool'
 import { MentorCreateProps } from './mentor.model'
 
 export class MentorService {
-  static async addMentor(payload: MentorCreateProps, userWhoCreated: string) {
-    const { mentorName, jobTitle, companyName, expertise, profileUrl } = payload
+  static async addMentor(
+    payload: MentorCreateProps,
+    userWhoCreated: string,
+    urlProfile: string
+  ) {
+    const { mentorName, jobTitle, companyName, expertise } = payload
     const { rows } = await supabasePool.query(
-      `INSERT INTO mentors (mentors_name, job_title, company_name, expertise, profile_url, created_by)
-            VALUES($1, $2, $3, $4, $5, $6) RETURNING mentors_id`,
-      [mentorName, jobTitle, companyName, expertise, profileUrl, userWhoCreated]
+      `INSERT INTO mentors (mentor_name, job_title, company_name, expertise, mentor_profile_url, created_by)
+            VALUES($1, $2, $3, $4, $5, $6) RETURNING mentor_id`,
+      [mentorName, jobTitle, companyName, expertise, urlProfile, userWhoCreated]
     )
     return rows[0]
   }
 
   static async getAllMentor() {
     const { rows } = await supabasePool.query(
-      `SELECT mentors_id, mentors_name, job_title, company_name, expertise, profile_url 
+      `SELECT mentor_id, mentor_name, job_title, company_name, expertise, mentor_profile_url 
         FROM mentors WHERE is_deleted = FALSE`
     )
     return rows
@@ -28,11 +32,11 @@ export class MentorService {
     let result
     try {
       result = await supabasePool.query(
-        `SELECT mentors_id FROM mentors WHERE mentors_id = $1 AND is_deleted = FALSE`,
+        `SELECT mentor_id FROM mentors WHERE mentor_id = $1 AND is_deleted = FALSE`,
         [mentorId]
       )
     } catch {
-      throw new BadRequest('Invalid mentors_id format')
+      throw new BadRequest('Invalid mentor_id format')
     }
 
     if (result.rows.length < 1) {
@@ -43,29 +47,60 @@ export class MentorService {
 
   static async updateMentor(
     mentorId: string,
-    payload: MentorCreateProps,
+    payload: Partial<MentorCreateProps>,
+    profileUrl: string | null,
     userWhoUpdated: string
   ) {
-    const { mentorName, jobTitle, companyName, expertise, profileUrl } = payload
+    const fields: string[] = []
+    const values: any[] = []
+    let idx = 1
+
+    if (payload.mentorName) {
+      fields.push(`mentor_name = $${idx++}`)
+      values.push(payload.mentorName)
+    }
+
+    if (payload.jobTitle) {
+      fields.push(`job_title = $${idx++}`)
+      values.push(payload.jobTitle)
+    }
+
+    if (payload.companyName) {
+      fields.push(`company_name = $${idx++}`)
+      values.push(payload.companyName)
+    }
+
+    if (payload.expertise) {
+      fields.push(`expertise = $${idx++}`)
+      values.push(payload.expertise)
+    }
+
+    if (profileUrl) {
+      fields.push(`mentor_profile_url = $${idx++}`)
+      values.push(profileUrl)
+    }
+
+    fields.push(`updated_by = $${idx++}`)
+    values.push(userWhoUpdated)
+
+    fields.push(`updated_date = NOW()`)
+
+    values.push(mentorId)
+
     const { rows } = await supabasePool.query(
-      `UPDATE mentors SET mentors_name = $1, job_title = $2, company_name = $3, expertise = $4, profile_url = $5, updated_by = $6, updated_date = NOW() 
-        WHERE mentors_id = $7 RETURNING mentors_name`,
-      [
-        mentorName,
-        jobTitle,
-        companyName,
-        expertise,
-        profileUrl,
-        userWhoUpdated,
-        mentorId,
-      ]
+      `UPDATE mentors
+     SET ${fields.join(', ')}
+     WHERE mentor_id = $${idx}
+     RETURNING mentor_name`,
+      values
     )
+
     return rows[0]
   }
 
   static async deleteMentor(mentorId: string) {
     const { rows } = await supabasePool.query(
-      `UPDATE mentors SET is_deleted = TRUE WHERE mentors_id = $1 RETURNING mentors_name`,
+      `UPDATE mentors SET is_deleted = TRUE WHERE mentor_id = $1 RETURNING mentor_name`,
       [mentorId]
     )
     return rows[0]

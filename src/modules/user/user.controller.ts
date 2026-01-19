@@ -6,15 +6,6 @@ import { UserCreateProps } from './user.model'
 import { UserService } from './user.service'
 
 export class UserController {
-  static async uploadProfileUserController(
-    profile: File
-  ): Promise<ApiResponse> {
-    const urlProfile = await upload(profile, '/user')
-    return ResponseHelper.success('Upload profile user berhasil', {
-      urlProfile,
-    })
-  }
-
   static async addUserController(
     payload: UserCreateProps,
     userWhoCreated: AuthUser
@@ -22,10 +13,14 @@ export class UserController {
     await UserService.verifyUsernameIsExisting(payload.username)
 
     const roleId = await UserService.getRoleId(payload.userRole)
+
+    const urlProfile = await upload(payload.Profile, '/user')
+
     const user = await UserService.addUser(
       payload,
       roleId,
-      userWhoCreated.user_id
+      userWhoCreated.user_id,
+      urlProfile
     )
 
     return ResponseHelper.created('Menambah user berhasil', user)

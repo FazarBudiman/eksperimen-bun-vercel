@@ -10,20 +10,22 @@ export class UserService {
   static async addUser(
     payload: UserCreateProps,
     roleId: string,
-    userWhoCreated: string
+    userWhoCreated: string,
+    urlProfile: string
   ) {
     const passwordHash = bcrypt.hashSync(payload.password, 12)
 
     const { rows } = await supabasePool.query(
       `INSERT INTO users (
-          users_id, username, password_hash, url_profile, users_role_id, created_by, created_date)
+          user_id, username, password_hash, full_name, user_profile_url, user_role_id, created_by, created_date)
         VALUES (
-          gen_random_uuid(), $1, $2, $3, $4, $5, NOW()) 
-        RETURNING users_id`,
+          gen_random_uuid(), $1, $2, $3, $4, $5, $6, NOW()) 
+        RETURNING user_id`,
       [
         payload.username,
         passwordHash,
-        payload.urlProfile,
+        payload.fullName,
+        urlProfile,
         roleId,
         userWhoCreated,
       ]
@@ -33,11 +35,11 @@ export class UserService {
 
   static async getRoleId(userRole: string) {
     const { rows } = await supabasePool.query(
-      `SELECT roles_id FROM roles WHERE roles_name = $1`,
+      `SELECT role_id FROM roles WHERE role_name = $1`,
       [userRole]
     )
 
-    return rows[0].roles_id
+    return rows[0].role_id
   }
 
   static async verifyUsernameIsExisting(username: string): Promise<boolean> {
@@ -56,13 +58,13 @@ export class UserService {
   static async getUsers() {
     const { rows } = await supabasePool.query(
       `SELECT 
-                u.users_id,
+                u.user_id,
                 u.username,
-                u.url_profile,
-                r.roles_name,
+                u.user_profile_url,
+                r.role_name,
                 u.is_active
             FROM users u
-            JOIN roles r ON u.users_role_id = r.roles_id
+            JOIN roles r ON u.user_role_id = r.role_id
             WHERE is_deleted = false
             `
     )
@@ -73,7 +75,7 @@ export class UserService {
     let result
     try {
       result = await supabasePool.query(
-        `SELECT users_id FROM users WHERE users_id = $1 AND is_deleted = false`,
+        `SELECT user_id FROM users WHERE user_id = $1 AND is_deleted = false`,
         [userId]
       )
     } catch {
@@ -89,7 +91,7 @@ export class UserService {
 
   static async deleteUserById(userId: string) {
     const { rows } = await supabasePool.query(
-      `UPDATE users SET is_deleted = true WHERE users_id = $1 RETURNING username`,
+      `UPDATE users SET is_deleted = true WHERE user_id = $1 RETURNING username`,
       [userId]
     )
     return rows[0]

@@ -2,25 +2,20 @@ import { upload } from '../../shared/services/upload'
 import { AuthUser } from '../../types/auth.type'
 import { ApiResponse } from '../../types/response.type'
 import { ResponseHelper } from '../../utils/responseHelper'
-import { MentorCreateProps } from './mentor.model'
+import { MentorCreateProps, MentorUpdateProps } from './mentor.model'
 import { MentorService } from './mentor.service'
 
 export class MentorController {
-  static async uploadProfileMentorController(
-    profile: File
-  ): Promise<ApiResponse> {
-    const urlProfile = await upload(profile, '/mentor')
-
-    return ResponseHelper.success('Upload profile mentor berhasil', {
-      urlProfile,
-    })
-  }
-
   static async addMentorController(
     payload: MentorCreateProps,
     user: AuthUser
   ): Promise<ApiResponse> {
-    const mentors_id = await MentorService.addMentor(payload, user.user_id)
+    const urlProfile = await upload(payload.profile, '/mentor')
+    const mentors_id = await MentorService.addMentor(
+      payload,
+      user.user_id,
+      urlProfile
+    )
 
     return ResponseHelper.created('Menambah mentor berhasil', mentors_id)
   }
@@ -36,19 +31,23 @@ export class MentorController {
 
   static async updateMentorController(
     mentorId: string,
-    payload: MentorCreateProps,
+    payload: MentorUpdateProps,
     user: AuthUser
   ): Promise<ApiResponse> {
     await MentorService.getMentorById(mentorId)
-    const { mentors_name } = await MentorService.updateMentor(
+
+    let profileUrl: string | null = null
+    if (payload.profile) {
+      profileUrl = await upload(payload.profile, '/mentor')
+    }
+    const { mentor_name } = await MentorService.updateMentor(
       mentorId,
       payload,
+      profileUrl,
       user.user_id
     )
 
-    return ResponseHelper.success(
-      `Memperbarui mentor: ${mentors_name} berhasil`
-    )
+    return ResponseHelper.success(`Memperbarui mentor: ${mentor_name} berhasil`)
   }
 
   static async deleteMentorController(mentorId: string): Promise<ApiResponse> {

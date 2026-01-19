@@ -1,31 +1,13 @@
 import { Elysia } from 'elysia'
 import { requireAuth } from '../../guards/auth.guard'
 import { bearer } from '@elysiajs/bearer'
-import { MentorCreateModel, MentorUploadModel } from './mentor.model'
+import { MentorCreateModel, MentorUpdateModel } from './mentor.model'
 import { MentorController } from './mentor.controller'
 import { assertAuth } from '../../utils/assertAuth'
 
 export const mentor = new Elysia().group('/mentors', (app) =>
   app
     .use(bearer())
-    .post(
-      '/upload',
-      async ({ body }) => {
-        const res = await MentorController.uploadProfileMentorController(
-          body.profile
-        )
-        return res
-      },
-      {
-        beforeHandle: requireAuth(['ADMIN', 'SUPER_ADMIN']),
-        body: MentorUploadModel,
-        detail: {
-          tags: ['Mentor'],
-          summary: 'Upload Profile Picture Mentor',
-        },
-      }
-    )
-
     .post(
       '/',
       async ({ body, store, set }) => {
@@ -53,7 +35,6 @@ export const mentor = new Elysia().group('/mentors', (app) =>
         return res
       },
       {
-        beforeHandle: requireAuth(['ADMIN', 'SUPER_ADMIN']),
         detail: {
           tags: ['Mentor'],
           summary: 'Get All Mentors',
@@ -73,7 +54,7 @@ export const mentor = new Elysia().group('/mentors', (app) =>
       },
       {
         beforeHandle: requireAuth(['ADMIN', 'SUPER_ADMIN']),
-        body: MentorCreateModel,
+        body: MentorUpdateModel,
         detail: {
           tags: ['Mentor'],
           summary: 'Update Mentor by Id',

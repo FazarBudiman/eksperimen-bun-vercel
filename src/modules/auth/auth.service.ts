@@ -6,8 +6,8 @@ import * as bcrypt from 'bcrypt'
 export class AuthService {
   static verifyUserCredential = async (payload: SignInProps) => {
     const { rows } = await supabasePool.query(
-      `SELECT u.users_id, u.password_hash, r.roles_name FROM users u
-                JOIN roles r ON u.users_role_id = r.roles_id
+      `SELECT u.user_id, u.password_hash, r.role_name FROM users u
+                JOIN roles r ON u.user_role_id = r.role_id
                 WHERE username = $1 `,
       [payload.username]
     )
@@ -16,14 +16,14 @@ export class AuthService {
       throw new BadRequest('Username Salah')
     }
 
-    const { users_id, password_hash, roles_name } = rows[0]
+    const { user_id, password_hash, role_name } = rows[0]
 
     const isMatch = await bcrypt.compare(payload.password, password_hash)
     if (isMatch === false) {
       throw new BadRequest('Password Salah')
     }
 
-    return { users_id, roles_name }
+    return { user_id, role_name }
   }
 
   static saveRefreshToken = async (token: string) => {
