@@ -13,7 +13,7 @@ export class MentorService {
   ) {
     const { mentorName, jobTitle, companyName, expertise } = payload
     const { rows } = await supabasePool.query(
-      `INSERT INTO mentors (mentor_name, job_title, company_name, expertise, mentor_profile_url, created_by)
+      `INSERT INTO mentors (mentor_name, mentor_job_title, mentor_company_name, mentor_expertise, mentor_profile_url, created_by)
             VALUES($1, $2, $3, $4, $5, $6) RETURNING mentor_id`,
       [mentorName, jobTitle, companyName, expertise, urlProfile, userWhoCreated]
     )
@@ -22,7 +22,7 @@ export class MentorService {
 
   static async getAllMentor() {
     const { rows } = await supabasePool.query(
-      `SELECT mentor_id, mentor_name, job_title, company_name, expertise, mentor_profile_url 
+      `SELECT mentor_id, mentor_name, mentor_job_title, mentor_company_name, mentor_expertise, mentor_profile_url 
         FROM mentors WHERE is_deleted = FALSE`
     )
     return rows
@@ -61,17 +61,17 @@ export class MentorService {
     }
 
     if (payload.jobTitle) {
-      fields.push(`job_title = $${idx++}`)
+      fields.push(`mentor_job_title = $${idx++}`)
       values.push(payload.jobTitle)
     }
 
     if (payload.companyName) {
-      fields.push(`company_name = $${idx++}`)
+      fields.push(`mentor_company_name = $${idx++}`)
       values.push(payload.companyName)
     }
 
     if (payload.expertise) {
-      fields.push(`expertise = $${idx++}`)
+      fields.push(`mentor_expertise = $${idx++}`)
       values.push(payload.expertise)
     }
 

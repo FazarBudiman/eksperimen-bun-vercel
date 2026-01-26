@@ -36,7 +36,7 @@ export class MitraService {
         [mitraId]
       )
     } catch {
-      throw new BadRequest('Invalid mitra_id fromat')
+      throw new BadRequest('Invalid mitra_id format')
     }
 
     if (result.rows.length < 1) {

@@ -17,7 +17,7 @@ export class MessageService {
     } = payload
     const { rows } = await supabasePool.query(
       `INSERT INTO messages(
-          sender_name, sender_email, organization_name, sender_phone, subject, message_body, status, created_date)
+          sender_name, sender_email, organization_name, sender_phone, subject, message_body, message_status, created_date)
         VALUES ($1, $2, $3, $4, $5, $6, 'NEW', NOW()) 
         RETURNING message_id`,
       [
@@ -34,7 +34,7 @@ export class MessageService {
 
   static async getAllMessage() {
     const { rows } = await supabasePool.query(
-      `SELECT message_id, sender_name, sender_email, sender_phone, organization_name, status, subject, message_body, created_date AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' AS created_date
+      `SELECT message_id, sender_name, sender_email, sender_phone, organization_name, message_status, subject, message_body, created_date AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' AS created_date
           FROM messages 
           WHERE is_deleted = false 
           ORDER BY created_date DESC`
@@ -66,7 +66,7 @@ export class MessageService {
   ) {
     const { rows } = await supabasePool.query(
       `UPDATE messages 
-        SET status = $1, updated_by = $2, updated_date = NOW() 
+        SET message_status = $1, updated_by = $2, updated_date = NOW() 
         WHERE message_id = $3 
         RETURNING sender_name`,
       [payload.status, userWhoUpdated, messageId]

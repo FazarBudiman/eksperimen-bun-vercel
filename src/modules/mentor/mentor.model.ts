@@ -36,7 +36,7 @@ export const MentorCreateModel = t.Object({
 
   profile: t.File({
     type: ['image/jpeg', 'image/png', 'image/webp'],
-    maxSize: '5m', // Batasi maksimal 2MB
+    maxSize: '5m',
     error:
       'File harus berupa gambar (JPG, PNG, WEBP) dengan ukuran maksimal 5MB',
   }),
