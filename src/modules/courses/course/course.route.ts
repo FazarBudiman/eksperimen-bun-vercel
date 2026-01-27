@@ -4,6 +4,7 @@ import { Elysia } from 'elysia'
 // import { requireAuth } from '../../../guards/auth.guard'
 // import { CourseCreateModel } from './course.model'
 import { CourseController } from './course.controller'
+import { QueryParamsCourseModel } from './course.model'
 
 export const course = new Elysia()
   .use(bearer())
@@ -22,6 +23,33 @@ export const course = new Elysia()
   //     body: CourseCreateModel,
   //   }
   // )
+  .get(
+    '/',
+    async ({ query }) => {
+      const res = await CourseController.getAllCourseController(query)
+      return res
+    },
+    {
+      query: QueryParamsCourseModel,
+      detail: {
+        tags: ['Courses'],
+        summary: 'Get All Course with Query Parameter (optional)',
+      },
+    }
+  )
+  .get(
+    '/upcoming-course',
+    async () => {
+      const res = await CourseController.getUpcomingCourseController()
+      return res
+    },
+    {
+      detail: {
+        tags: ['Courses'],
+        summary: 'Get Upcoming Course (1 category 1 course)',
+      },
+    }
+  )
   .get(
     '/:courseId',
     async ({ params }) => {
