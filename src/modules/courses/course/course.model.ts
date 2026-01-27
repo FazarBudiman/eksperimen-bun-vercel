@@ -67,6 +67,8 @@
   }
 */
 
+import { Static, t } from 'elysia'
+
 // import { Static, t } from 'elysia'
 
 // export const CourseStatus = {
@@ -114,3 +116,10 @@
 // })
 
 // export type CourseCreateProps = Static<typeof CourseCreateModel>
+
+export const QueryParamsCourseModel = t.Object({
+  field: t.Optional(t.String()),
+  available: t.Optional(t.Boolean()),
+})
+
+export type QueryParamsCourseProps = Static<typeof QueryParamsCourseModel>

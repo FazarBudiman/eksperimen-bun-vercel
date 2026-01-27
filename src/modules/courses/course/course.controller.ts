@@ -3,9 +3,7 @@ import { ApiResponse } from '../../../types/response.type'
 // import { AuthUser } from '../../../types/auth.type'
 // import { upload } from '../../../shared/services/upload'
 import { ResponseHelper } from '../../../utils/responseHelper'
-import { CourseBatchService } from './course-batch/course-batch.service'
-import { CourseBenefitService } from './course-benefit/course-benefit.service'
-import { CourseMaterialService } from './course-material/course-material.service'
+import { QueryParamsCourseProps } from './course.model'
 import { CourseService } from './course.service'
 
 export class CourseController {
@@ -22,25 +20,30 @@ export class CourseController {
   //   return ResponseHelper.created('Menambah course berhasil', courseId)
   // }
 
+  static async getAllCourseController(
+    query: QueryParamsCourseProps
+  ): Promise<ApiResponse> {
+    const courses = await CourseService.getAllCourses(query)
+    return ResponseHelper.success(
+      'Mengambil seluruh data course berhasil',
+      courses
+    )
+  }
+
+  static async getUpcomingCourseController(): Promise<ApiResponse> {
+    const upcomingCourse = await CourseService.getUpcomingCourse()
+    return ResponseHelper.success(
+      'Mengambil data upcoming course berhasil',
+      upcomingCourse
+    )
+  }
+
   static async getCourseByIdController(courseId: string): Promise<ApiResponse> {
     await CourseService.verifyCourseisExist(courseId)
-    const course = await CourseService.getCourseById(courseId)
-
-    const courseMaterial =
-      await CourseMaterialService.getCourseMaterialByCourseId(courseId)
-
-    const courseBenefit =
-      await CourseBenefitService.getCourseBenefitByCourseId(courseId)
-
-    const courseBatch =
-      await CourseBatchService.getCourseBatchByCourseId(courseId)
-
-    const data = {
-      ...course,
-      course_material: courseMaterial,
-      course_benefit: courseBenefit,
-      course_batch: courseBatch,
-    }
-    return ResponseHelper.success('Mengambil data course berhasil', data)
+    const course = await CourseService.getDetailCourseById(courseId)
+    return ResponseHelper.success(
+      'Mengambil data detail course berhasil',
+      course
+    )
   }
 }
