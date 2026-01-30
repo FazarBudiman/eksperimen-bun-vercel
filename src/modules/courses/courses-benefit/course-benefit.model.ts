@@ -1,6 +1,7 @@
 import { Static, t } from 'elysia'
 
-export const CourseBenefitCreateModel = t.Array(
+// Model Course Benefit
+export const CourseBenefitModel = t.Array(
   t.Object({
     courseBenefitId: t.String({
       format: 'uuid',
@@ -12,20 +13,4 @@ export const CourseBenefitCreateModel = t.Array(
   })
 )
 
-export type COurseBenefitCreateProps = Static<typeof CourseBenefitCreateModel>
-
-export const CourseBenefitUpdateModel = t.Optional(
-  t.Array(
-    t.Object({
-      courseBenefitId: t.String({
-        format: 'uuid',
-        error: 'Format uuid tidak valid',
-      }),
-      orderNum: t.Integer({
-        error: 'order num harus integer',
-      }),
-    })
-  )
-)
-
-export type COurseBenefitUpdateProps = Static<typeof CourseBenefitUpdateModel>
+export type CourseBenefitProps = Static<typeof CourseBenefitModel>

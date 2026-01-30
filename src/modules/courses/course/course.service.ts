@@ -1,16 +1,12 @@
 import { PoolClient } from 'pg'
-import {
-  BadRequest,
-  ResourceNotFoundError,
-} from '../../../exceptions/client.error'
+import { ResourceNotFoundError } from '../../../exceptions/client.error'
 import { supabasePool } from '../../../supabase/supabasePool'
-import { CourseUpdateProps, QueryParamsCourseProps } from './course.model'
-import { CourseCreateProps } from './course.model'
-import { COurseBenefitUpdateProps } from '../courses-benefit/course-benefit.model'
-import { CourseMaterialUpdateProps } from './course-material/course-material.model'
+import { CourseProps, QueryCourseProps } from './course.model'
+import { CourseBenefitService } from '../courses-benefit/course-benefit.service'
+import { CourseMaterialService } from './course-material/course_material.service'
 
 export class CourseService {
-  static async addCourse(payload: CourseCreateProps, userWhocreated: string) {
+  static async addCourse(payload: CourseProps, userWhocreated: string) {
     const client = await supabasePool.connect()
     const {
       courseTitle,
@@ -37,21 +33,25 @@ export class CourseService {
 
       const { course_id } = rows[0]
 
-      for (const benefit of courseBenefits) {
-        await client.query(
-          `INSERT INTO courses_course_benefits (ccb_course_id, ccb_benefit_id, ccb_order_num)
+      await Promise.all(
+        courseBenefits.map((benefit) =>
+          client.query(
+            `INSERT INTO courses_course_benefits (ccb_course_id, ccb_benefit_id, ccb_order_num)
             VALUES ($1, $2, $3)`,
-          [course_id, benefit.courseBenefitId, benefit.orderNum]
+            [course_id, benefit.courseBenefitId, benefit.orderNum]
+          )
         )
-      }
+      )
 
-      for (const material of courseMaterials) {
-        await client.query(
-          `INSERT INTO course_materials (course_material_course_id, course_material_title, course_material_description, course_material_order_num)
+      await Promise.all(
+        courseMaterials.map((material) =>
+          client.query(
+            `INSERT INTO course_materials (course_material_course_id, course_material_title, course_material_description, course_material_order_num)
             VALUES ($1, $2, $3, $4)`,
-          [course_id, material.title, material.description, material.orderNum]
+            [course_id, material.title, material.description, material.orderNum]
+          )
         )
-      }
+      )
 
       await client.query('COMMIT')
       return course_id
@@ -64,21 +64,17 @@ export class CourseService {
   }
 
   static async verifyCourseisExist(courseId: string) {
-    let result
-    try {
-      result = await supabasePool.query(
-        `SELECT 1 FROM courses WHERE course_id = $1 AND is_deleted = false`,
-        [courseId]
-      )
-    } catch {
-      throw new BadRequest('Invalid course_id format')
-    }
-    if (result.rows.length === 0) {
-      throw new ResourceNotFoundError('Resource course not found')
+    const { rows } = await supabasePool.query(
+      `SELECT 1 FROM courses WHERE course_id = $1 AND is_deleted = false`,
+      [courseId]
+    )
+
+    if (rows.length === 0) {
+      throw new ResourceNotFoundError('Resource course tidak ditemukan')
     }
   }
 
-  static async getAllCourses(query: QueryParamsCourseProps) {
+  static async getAllCourses(query: QueryCourseProps) {
     const values: any[] = []
     const conditions: string[] = []
 
@@ -205,118 +201,28 @@ export class CourseService {
     return rows
   }
 
-  static async getDetailCourseById(courseId: string) {
+  static async getCourseById(courseId: string) {
     const { rows } = await supabasePool.query(
       `SELECT
         c.course_id,
         c.course_title,
         c.course_description,
         cc.course_category_name,
-        cf.course_field_name,
-
-        /* ===== COURSE MATERIALS ===== */
-        COALESCE(
-            (
-                SELECT json_agg(
-                    json_build_object(
-                        'title', cm.course_material_title,
-                        'description', cm.course_material_description
-                    )
-                    ORDER BY cm.course_material_order_num
-                )
-                FROM course_materials cm
-                WHERE cm.course_material_course_id = c.course_id
-            ),
-            '[]'::json
-        ) AS course_material,
-
-        /* ===== COURSE BENEFITS ===== */
-        COALESCE(
-            (
-                SELECT json_agg(
-                    json_build_object(
-                        'title', cb.course_benefit_title,
-                        'description', cb.course_benefit_description
-                    )
-                    ORDER BY ccb.ccb_order_num
-                )
-                FROM courses_course_benefits ccb
-                JOIN course_benefits cb
-                  ON cb.course_benefit_id = ccb.ccb_benefit_id
-                WHERE ccb.ccb_course_id = c.course_id
-            ),
-            '[]'::json
-        ) AS course_benefit,
-
-        /* ===== COURSE BATCHES ===== */
-        COALESCE(
-            (
-                SELECT json_agg(
-                    json_build_object(
-                        'name', cb.course_batch_name,
-                        'posterUrl', cb.course_batch_poster_url,
-                        'registration_start', cb.course_batch_registration_start,
-                        'registration_end', cb.course_batch_registration_end,
-                        'start_date', cb.course_batch_start_date,
-                        'end_date', cb.course_batch_end_date,
-
-                        'instructor', json_build_object(
-                            'name', ctr.contributor_name,
-                            'jobTitle', ctr.contributor_job_title,
-                            'companyName', ctr.contributor_company_name,
-                            'profileUrl', ctr.contributor_profile_url
-                        ),
-
-                        'prices', json_build_object(
-                            'basePrice', cp.base_price,
-                            'discountType', cp.discount_type,
-                            'discountValue', cp.discount_value,
-                            'finalPrice', cp.final_price
-                        ),
-
-                        'sessions',
-                            COALESCE(
-                                (
-                                    SELECT json_agg(
-                                        json_build_object(
-                                            'topic', cs.course_session_topic,
-                                            'date', cs.course_session_date,
-                                            'startTime', cs.course_session_start_time,
-                                            'endTime', cs.course_session_end_time
-                                        )
-                                        ORDER BY cs.course_session_date
-                                    )
-                                    FROM course_sessions cs
-                                    WHERE cs.course_session_batch_id = cb.course_batch_id
-                                ),
-                                '[]'::json
-                            )
-                    )
-                )
-                FROM course_batches cb
-                LEFT JOIN contributors ctr
-                  ON cb.course_batch_contributor_id = ctr.contributor_id
-                LEFT JOIN course_prices cp
-                  ON cb.course_batch_id = cp.course_price_course_batch_id
-                WHERE cb.course_batch_course_id = c.course_id
-            ),
-            '[]'::json
-        ) AS course_batch
-
-    FROM courses c
-    JOIN course_categories cc ON c.category_id = cc.course_category_id
-    JOIN course_fields cf ON c.field_id = cf.course_field_id
-    WHERE c.course_id = $1
-      AND c.is_deleted = false;
-    `,
+        cf.course_field_name
+      FROM courses c
+      JOIN course_categories cc ON c.category_id = cc.course_category_id
+      JOIN course_fields cf ON c.field_id = cf.course_field_id
+      WHERE c.course_id = $1
+        AND c.is_deleted = false
+      `,
       [courseId]
     )
-    return rows
+    return rows[0]
   }
 
   static async updateCourseMain(
     client: PoolClient,
-    payload: CourseUpdateProps,
+    payload: Partial<CourseProps>,
     courseId: string,
     userWhoUpdated: string
   ) {
@@ -348,7 +254,7 @@ export class CourseService {
 
     values.push(courseId)
 
-    const { rows } = await supabasePool.query(
+    const { rows } = await client.query(
       `UPDATE courses SET ${fields.join(', ')}
         WHERE course_id = $${idx} RETURNING course_title`,
       values
@@ -356,49 +262,8 @@ export class CourseService {
     return rows[0]
   }
 
-  static async replaceCourseBenefits(
-    client: PoolClient,
-    courseId: string,
-    benefits: COurseBenefitUpdateProps
-  ) {
-    await client.query(
-      `DELETE FROM courses_course_benefits WHERE ccb_course_id = $1`,
-      [courseId]
-    )
-
-    for (const b of benefits) {
-      await client.query(
-        `INSERT INTO courses_course_benefits(
-          ccb_course_id, ccb_benefit_id, ccb_order_num)
-        VALUES ($1, $2, $3)`,
-        [courseId, b.courseBenefitId, b.orderNum]
-      )
-    }
-  }
-
-  static async replaceCourseMaterials(
-    client: PoolClient,
-    courseId: string,
-    materials: CourseMaterialUpdateProps
-  ) {
-    await client.query(
-      `DELETE FROM course_materials WHERE course_material_course_id = $1`,
-      [courseId]
-    )
-
-    for (const m of materials) {
-      await client.query(
-        `INSERT INTO course_materials (
-          course_material_course_id, course_material_title, 
-          course_material_description, course_material_order_num)
-        VALUES ($1, $2, $3, $4)`,
-        [courseId, m.title, m.description, m.orderNum]
-      )
-    }
-  }
-
   static async updateCourse(
-    payload: CourseUpdateProps,
+    payload: Partial<CourseProps>,
     courseId: string,
     userWhoUpdated: string
   ) {
@@ -415,7 +280,7 @@ export class CourseService {
       )
 
       if (payload.courseBenefits) {
-        await CourseService.replaceCourseBenefits(
+        await CourseBenefitService.replaceCourseBenefits(
           client,
           courseId,
           payload.courseBenefits
@@ -423,7 +288,7 @@ export class CourseService {
       }
 
       if (payload.courseMaterials) {
-        await this.replaceCourseMaterials(
+        await CourseMaterialService.replaceCourseMaterials(
           client,
           courseId,
           payload.courseMaterials
@@ -431,7 +296,7 @@ export class CourseService {
       }
 
       await client.query('COMMIT')
-      return { course_title }
+      return course_title
     } catch (e) {
       await client.query('ROLLBACK')
       throw e

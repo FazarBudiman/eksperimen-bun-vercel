@@ -1,10 +1,13 @@
 import { bearer } from '@elysiajs/bearer'
-import { Elysia } from 'elysia'
+import { Elysia, t } from 'elysia'
 import { assertAuth } from '../../../utils/assertAuth'
 import { requireAuth } from '../../../guards/auth.guard'
-import { CourseCreateModel, CourseUpdateModel } from './course.model'
 import { CourseController } from './course.controller'
-import { QueryParamsCourseModel } from './course.model'
+import {
+  CourseModel,
+  ParamsCourseModel,
+  QueryCourseModel,
+} from './course.model'
 
 export const course = new Elysia()
   .use(bearer())
@@ -20,7 +23,7 @@ export const course = new Elysia()
     },
     {
       beforeHandle: requireAuth('CREATE_COURSE'),
-      body: CourseCreateModel,
+      body: CourseModel,
       detail: {
         tags: ['Courses'],
         summary: '[course] Create a New Course',
@@ -34,7 +37,7 @@ export const course = new Elysia()
       return res
     },
     {
-      query: QueryParamsCourseModel,
+      query: QueryCourseModel,
       detail: {
         tags: ['Courses'],
         summary: '[course] Get All Course with Query Parameter (optional)',
@@ -57,12 +60,12 @@ export const course = new Elysia()
   .get(
     '/:courseId',
     async ({ params }) => {
-      const res = await CourseController.getCourseByIdController(
-        params.courseId
-      )
+      const res = await CourseController.getCourseByIdController(params)
       return res
     },
     {
+      beforeHandle: requireAuth('READ_COURSE'),
+      params: ParamsCourseModel,
       detail: {
         tags: ['Courses'],
         summary: '[course] Get course By Id',
@@ -70,19 +73,20 @@ export const course = new Elysia()
     }
   )
 
-  .put(
+  .patch(
     '/:courseId',
     async ({ params, body, store }) => {
       const res = await CourseController.updateCourseController(
         body,
-        params.courseId,
+        params,
         assertAuth(store)
       )
       return res
     },
     {
       beforeHandle: requireAuth('UPDATE_COURSE'),
-      body: CourseUpdateModel,
+      params: ParamsCourseModel,
+      body: t.Partial(CourseModel),
       detail: {
         tags: ['Courses'],
         summary: '[course] Update Course by Id',
@@ -93,11 +97,12 @@ export const course = new Elysia()
   .delete(
     '/:courseId',
     async ({ params }) => {
-      const res = await CourseController.deleteCourseController(params.courseId)
+      const res = await CourseController.deleteCourseController(params)
       return res
     },
     {
       beforeHandle: requireAuth('DELETE_COURSE'),
+      params: ParamsCourseModel,
       detail: {
         tags: ['Courses'],
         summary: '[course] Delete Course by Id',

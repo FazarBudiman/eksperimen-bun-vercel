@@ -1,19 +1,15 @@
 import { PoolClient } from 'pg'
-import {
-  BadRequest,
-  ResourceNotFoundError,
-} from '../../../../exceptions/client.error'
+import { ResourceNotFoundError } from '../../../../exceptions/client.error'
 import { supabasePool } from '../../../../supabase/supabasePool'
 import {
-  CourseBatchCreateProps,
-  CourseBatchPriceProps,
-  CourseBatchSessionProp,
-  CourseBatchUpdateProps,
+  CourseBatchProps,
+  CoursePriceProps,
+  CourseSessionProps,
 } from './course-batch.model'
 
 export class CourseBatchService {
   static async addCourseBatch(
-    payload: CourseBatchCreateProps,
+    payload: CourseBatchProps,
     courseId: string,
     userWhocreated: string
   ) {
@@ -31,8 +27,6 @@ export class CourseBatchService {
     } = payload
 
     try {
-      await client.query
-
       const { rows } = await client.query(
         `INSERT INTO course_batches (
           course_batch_course_id, course_batch_name,
@@ -55,22 +49,24 @@ export class CourseBatchService {
 
       const { course_batch_id } = rows[0]
 
-      for (const session of batchSession) {
-        await client.query(
-          `INSERT INTO course_sessions (
+      await Promise.all(
+        batchSession.map((session) =>
+          client.query(
+            `INSERT INTO course_sessions (
             course_session_batch_id, course_session_topic, 
             course_session_date, course_session_start_time, 
             course_session_end_time)
           VALUES ($1, $2, $3, $4, $5)`,
-          [
-            course_batch_id,
-            session.topic,
-            session.sessionDate,
-            session.sessionStartTime,
-            session.sessionEndTime,
-          ]
+            [
+              course_batch_id,
+              session.topic,
+              session.sessionDate,
+              session.sessionStartTime,
+              session.sessionEndTime,
+            ]
+          )
         )
-      }
+      )
 
       await client.query(
         `INSERT INTO course_prices (
@@ -95,17 +91,13 @@ export class CourseBatchService {
   }
 
   static async verfifyCourseBatchisExist(batchId: string) {
-    let result
-    try {
-      result = await supabasePool.query(
-        `SELECT 1 FROM course_batches WHERE course_batch_id = $1`,
-        [batchId]
-      )
-    } catch {
-      throw new BadRequest('Invalid batch_id format')
-    }
-    if (result.rows.length === 0) {
-      throw new ResourceNotFoundError('Resource course not found')
+    const { rows } = await supabasePool.query(
+      `SELECT 1 FROM course_batches WHERE course_batch_id = $1`,
+      [batchId]
+    )
+
+    if (rows.length === 0) {
+      throw new ResourceNotFoundError('Resource batch of course not found')
     }
   }
 
@@ -115,14 +107,40 @@ export class CourseBatchService {
     userWhoUpdated: string
   ) {
     await supabasePool.query(
-      `UPDATE course_batches SET course_batch_poster_url = $1, updated_by = $2, updated_date = NOW() WHERE course_batch_id = $3`,
+      `UPDATE course_batches 
+      SET course_batch_poster_url = $1, 
+        updated_by = $2, updated_date = NOW() 
+      WHERE course_batch_id = $3`,
       [posterUrl, userWhoUpdated, batchId]
     )
   }
 
+  static async getCourseBatchByCourseId(courseId: string) {
+    const { rows } = await supabasePool.query(
+      `SELECT 
+        cb.course_batch_name as name, cb.course_batch_poster_url as poster_url, 
+          cb.course_batch_registration_start as registration_start,
+          cb.course_batch_registration_end as registration_end,
+          cb.course_batch_start_date as start_date, cb.course_batch_end_date as end_date, 
+          cb.course_batch_status as batch_status,
+        c.contributor_name as instructor_name, c.contributor_job_title as instrutor_job_title, 
+          c.contributor_company_name as instructor_company_name, 
+          c.contributor_profile_url as instructor_profile_url,
+        cp.base_price, cp.discount_type, cp.discount_value, cp.final_price
+      FROM course_batches cb
+      JOIN contributors c 
+        ON cb.course_batch_contributor_id = c.contributor_id
+      JOIN course_prices cp
+        ON cb.course_batch_id = cp.course_price_course_batch_id 
+      WHERE course_batch_course_id = $1`,
+      [courseId]
+    )
+    return rows
+  }
+
   static async updateCourseBatchMain(
     client: PoolClient,
-    payload: CourseBatchUpdateProps,
+    payload: Partial<CourseBatchProps>,
     batchId: string,
     userWhoUpdated: string
   ) {
@@ -187,7 +205,7 @@ export class CourseBatchService {
   static async replaceCourseBatchSession(
     client: PoolClient,
     batchId: string,
-    sessions: CourseBatchSessionProp
+    sessions: CourseSessionProps
   ) {
     await client.query(
       `DELETE FROM course_sessions WHERE course_session_batch_id = $1`,
@@ -209,25 +227,47 @@ export class CourseBatchService {
   static async updateCourseBatchPrice(
     client: PoolClient,
     batchId: string,
-    prices: CourseBatchPriceProps
+    prices: Partial<CoursePriceProps>
   ) {
+    const fields: string[] = []
+    const values: any[] = []
+    let idx = 1
+
+    if (prices.basePrice !== undefined) {
+      fields.push(`base_price = $${idx++}`)
+      values.push(prices.basePrice)
+    }
+
+    if (prices.discountType !== undefined) {
+      fields.push(`discount_type = $${idx++}`)
+      values.push(prices.discountType)
+    }
+
+    if (prices.discountValue !== undefined) {
+      fields.push(`discount_value = $${idx++}`)
+      values.push(prices.discountValue)
+    }
+
+    if (prices.finalPrice !== undefined) {
+      fields.push(`final_price = $${idx++}`)
+      values.push(prices.finalPrice)
+    }
+
+    // nothing to update → avoid invalid SQL
+    if (fields.length === 0) return
+
+    values.push(batchId)
+
     await client.query(
-      `UPDATE course_prices SET 
-        base_price = $1, discount_type = $2, 
-        discount_value = $3, final_price = $4
-      WHERE course_price_course_batch_id = $5`,
-      [
-        prices.basePrice,
-        prices.discountType,
-        prices.discountValue,
-        prices.finalPrice,
-        batchId,
-      ]
+      `UPDATE course_prices
+     SET ${fields.join(', ')}
+     WHERE course_price_course_batch_id = $${idx}`,
+      values
     )
   }
 
   static async updateCourseBatch(
-    payload: CourseBatchUpdateProps,
+    payload: Partial<CourseBatchProps>,
     batchId: string,
     userWhoUpdated: string
   ) {
