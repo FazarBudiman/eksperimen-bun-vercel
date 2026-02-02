@@ -1,7 +1,7 @@
-import { AuthUser } from '../../types/auth.type'
-import { ApiResponse } from '../../types/response.type'
-import { ResponseHelper } from '../../utils/responseHelper'
-import { generateUniquePageSlug } from '../../utils/slug'
+import { AuthUser } from '../../../types/auth.type'
+import { ApiResponse } from '../../../types/response.type'
+import { ResponseHelper } from '../../../utils/responseHelper'
+import { generateUniquePageSlug } from '../../../utils/slug'
 import { PageProps, ParamsPageProps } from './page.model'
 import { PageService } from './page.service'
 

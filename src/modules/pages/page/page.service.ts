@@ -1,5 +1,5 @@
-import { ResourceNotFoundError } from '../../exceptions/client.error'
-import { supabasePool } from '../../supabase/supabasePool'
+import { ResourceNotFoundError } from '../../../exceptions/client.error'
+import { supabasePool } from '../../../supabase/supabasePool'
 
 export class PageService {
   static async getParentPageId(pageTitle: string) {

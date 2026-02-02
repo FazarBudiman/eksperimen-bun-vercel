@@ -9,7 +9,8 @@ import { mitra } from './modules/mitra/mitra.route'
 import { testimoni } from './modules/testimoni/testimoni.route'
 import { courses } from './modules/courses/courses.index'
 import { contributor } from './modules/contributor/contributor.route'
-import { pages } from './modules/pages/page.route'
+import { pages } from './modules/pages/pages.index'
+import { article } from './modules/article/article.route'
 
 const App = new Elysia()
   .use(cors())
@@ -28,7 +29,8 @@ const App = new Elysia()
           { name: 'Mitra', description: 'Mitra Endpoint' },
           { name: 'Testimoni', description: 'Testimoni Endpoint' },
           { name: 'Courses', description: 'Courses Endpoint' },
-          { name: 'pages', description: 'Pages Endpoint' },
+          { name: 'Pages', description: 'Pages Endpoint' },
+          { name: 'Article', description: 'Article Endpoint' },
         ],
       },
     })
@@ -79,7 +81,7 @@ const App = new Elysia()
   })
 
   // Route Endpoint
-  .get('/', () => 'The King is Back')
+  .get('/', () => 'Welcome To Arutala CMS API')
   .use(auth)
   .use(user)
   .use(message)
@@ -88,5 +90,6 @@ const App = new Elysia()
   .use(testimoni)
   .use(courses)
   .use(pages)
+  .use(article)
 
 export default App

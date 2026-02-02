@@ -115,14 +115,14 @@ export class TestimoniService {
     }
     fields.push(`updated_by = $${idx++}`)
     values.push(userWhoUpdated)
-
     fields.push(`updated_date = NOW()`)
+
     values.push(testimoniId)
 
     const { rows } = await supabasePool.query(
       `UPDATE testimonies
             SET ${fields.join(', ')}
-            WHERE testimoni_id= $${idx}
+            WHERE testimoni_id = $${idx}
             RETURNING author_name`,
       values
     )
