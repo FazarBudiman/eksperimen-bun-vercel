@@ -48,14 +48,36 @@ export class AnalyticsService {
 
   static async getMessageMonthlyStats() {
     const { rows } = await supabasePool.query(
-      `SELECT
-        TO_CHAR(created_date, 'Mon YYYY') AS month,
-        DATE_TRUNC('month', created_date) AS sort_key,
-    COUNT(*)::int AS total
-    FROM messages
-    WHERE is_deleted = false
-    GROUP BY month, sort_key
-    ORDER BY sort_key`
+      `WITH last_12_months AS (
+        SELECT
+            date_trunc(
+            'month',
+            (CURRENT_DATE AT TIME ZONE 'Asia/Jakarta')
+            ) - INTERVAL '1 month' * gs.i AS month_start
+        FROM generate_series(0, 11) AS gs(i)
+        ),
+        
+        message_stats AS (
+        SELECT
+            date_trunc(
+            'month',
+            created_date AT TIME ZONE 'Asia/Jakarta'
+            ) AS month_start,
+            COUNT(*)::int AS total
+        FROM messages
+        WHERE is_deleted = false
+        GROUP BY month_start
+        )
+
+        SELECT
+            to_char(l.month_start, 'Mon YYYY') AS month,
+            l.month_start AS sort_key,
+            COALESCE(ms.total, 0) AS total
+        FROM last_12_months l
+        LEFT JOIN message_stats ms
+        ON ms.month_start = l.month_start
+        ORDER BY l.month_start;
+        `
     )
     return rows
   }
