@@ -64,7 +64,7 @@ export const course = new Elysia()
       return res
     },
     {
-      beforeHandle: requireAuth('READ_COURSE'),
+      // beforeHandle: requireAuth('READ_COURSE'),
       params: ParamsCourseModel,
       detail: {
         tags: ['Courses'],
