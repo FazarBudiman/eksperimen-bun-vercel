@@ -44,7 +44,7 @@ export class AuthService {
     await supabasePool.query(`INSERT INTO authentications VALUES ($1)`, [token])
   }
 
-  static verifyRefreshTokenExist = async (token: string | undefined) => {
+  static verifyRefreshTokenExist = async (token: string) => {
     const { rows } = await supabasePool.query(
       `SELECT refresh_token FROM authentications WHERE refresh_token = $1`,
       [token]
@@ -55,7 +55,7 @@ export class AuthService {
     }
   }
 
-  static deleteRefreshToken = async (token: string | undefined) => {
+  static deleteRefreshToken = async (token: string) => {
     await supabasePool.query(
       `DELETE from authentications WHERE refresh_token = $1`,
       [token]

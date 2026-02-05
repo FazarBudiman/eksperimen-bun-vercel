@@ -2,7 +2,7 @@ import { BadRequest } from '../../exceptions/client.error'
 import { AccessTokenPayload } from '../../plugins/jwt/token.schema'
 import { ApiResponse } from '../../types/response.type'
 import { ResponseHelper } from '../../utils/responseHelper'
-import { SignInProps } from './auth.model'
+import { RefreshTokenProps, SignInProps } from './auth.model'
 import { AuthService } from './auth.service'
 
 export class AuthController {
@@ -37,18 +37,8 @@ export class AuthController {
     })
   }
 
-  // static async getWhoIsAuthenticatedController(
-  //   token: string | undefined,
-  //   accessToken: {
-  //     verify: (payload: AccessTokenPayload) => Promise<string>
-  //   }
-  // ) : Promise<ApiResponse> {
-  //   const decoded = await accessToken.verify(token)
-  //   return ResponseHelper.success('Mengambil data yang terautentikasi')
-  // }
-
   static async refreshController(
-    token: string | undefined,
+    payload: RefreshTokenProps,
     accessToken: {
       sign: (payload: AccessTokenPayload) => Promise<string>
     },
@@ -56,16 +46,16 @@ export class AuthController {
       verify: (token?: string) => Promise<any>
     }
   ): Promise<ApiResponse> {
-    // const { refresh_token } = payload
+    const { refresh_token } = payload
 
     // 1. Verify refresh token JWT
-    const decoded = await refreshToken.verify(token)
+    const decoded = await refreshToken.verify(refresh_token)
     if (!decoded) {
       throw new BadRequest('Invalid refresh token')
     }
 
     // 2. Check refresh token exists in DB
-    await AuthService.verifyRefreshTokenExist(token)
+    await AuthService.verifyRefreshTokenExist(refresh_token)
 
     // 3. Issue new access token (reuse claims)
     const newAccessToken = await accessToken.sign({
@@ -80,10 +70,12 @@ export class AuthController {
   }
 
   static async signOutController(
-    token: string | undefined
+    payload: RefreshTokenProps
   ): Promise<ApiResponse> {
-    await AuthService.verifyRefreshTokenExist(token)
-    await AuthService.deleteRefreshToken(token)
+    const { refresh_token } = payload
+    await AuthService.verifyRefreshTokenExist(refresh_token)
+
+    await AuthService.deleteRefreshToken(refresh_token)
 
     return ResponseHelper.success('Sign out berhasil')
   }

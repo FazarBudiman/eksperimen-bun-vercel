@@ -59,7 +59,7 @@ export class ArticleService {
     const { rows } = await supabasePool.query(
       `SELECT 
         article_id, article_title, article_cover_url, 
-        article_content_text, article_status
+        article_content_text, article_content_blocks, article_status
       FROM articles 
       WHERE is_deleted = FALSE
         `

@@ -14,5 +14,11 @@ export const SignInModel = t.Object({
     })
   ),
 })
-
 export type SignInProps = Static<typeof SignInModel>
+
+export const RefreshTokenModel = t.Object({
+  refresh_token: t.String({
+    error: 'Token harus berupa string',
+  }),
+})
+export type RefreshTokenProps = Static<typeof RefreshTokenModel>

@@ -1,9 +1,7 @@
 import { Elysia } from 'elysia'
 import { AuthController } from './auth.controller'
-import { SignInModel } from './auth.model'
+import { RefreshTokenModel, SignInModel } from './auth.model'
 import { jwtPlugin } from '../../plugins/jwt/jwt.plugin'
-
-// const { NODE_ENV } = process.env
 
 export const auth = (app: Elysia) =>
   app.group('/auth', (app) =>
@@ -11,25 +9,12 @@ export const auth = (app: Elysia) =>
       .use(jwtPlugin)
       .post(
         '/sign-in',
-        async ({ body, accessToken, refreshToken, cookie }) => {
+        async ({ body, accessToken, refreshToken }) => {
           const res = await AuthController.signInController(
             body,
             accessToken,
             refreshToken
           )
-
-          const { data } = res
-          cookie.refresh_token.set({
-            value: data.refresh_token,
-            httpOnly: true,
-            // secure: NODE_ENV === 'production',
-            // sameSite: 'strict',
-            secure: false,
-            sameSite: 'none',
-            path: '/',
-            maxAge: 60 * 60 * 24 * 7,
-          })
-
           return res
         },
         {
@@ -40,38 +25,19 @@ export const auth = (app: Elysia) =>
           },
         }
       )
-      // .get(
-      //   '/me',
-      //   async ({ cookie, accessToken }) => {
-      //     const token = cookie.refresh_token.value
-
-      //     const res = AuthController.getWhoIsAuthenticatedController(
-      //       token,
-      //       accessToken
-      //     )
-      //     return res
-      //   },
-      //   {
-      //     detail: {
-      //       tags: ['Auth'],
-      //       summary: 'Get Detail Information Who Authenticated',
-      //     },
-      //   }
-      // )
 
       .put(
         '/refresh',
-        async ({ cookie, accessToken, refreshToken }) => {
-          const token = cookie.refresh_token.value
-
+        async ({ body, accessToken, refreshToken }) => {
           const res = AuthController.refreshController(
-            token,
+            body,
             accessToken,
             refreshToken
           )
           return res
         },
         {
+          body: RefreshTokenModel,
           detail: {
             tags: ['Auth'],
             summary: 'Refresh Access Token',
@@ -80,12 +46,12 @@ export const auth = (app: Elysia) =>
       )
       .delete(
         '/sign-out',
-        async ({ cookie }) => {
-          const token = cookie.refresh_token.value
-          const res = await AuthController.signOutController(token)
+        async ({ body }) => {
+          const res = await AuthController.signOutController(body)
           return res
         },
         {
+          body: RefreshTokenModel,
           detail: {
             tags: ['Auth'],
             summary: 'Sign Out',
