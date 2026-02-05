@@ -2,6 +2,9 @@ import { Elysia } from 'elysia'
 import { AuthController } from './auth.controller'
 import { RefreshTokenModel, SignInModel } from './auth.model'
 import { jwtPlugin } from '../../plugins/jwt/jwt.plugin'
+import { assertAuth } from '../../utils/assertAuth'
+import bearer from '@elysiajs/bearer'
+import { requireAuth } from '../../guards/auth.guard'
 
 export const auth = (app: Elysia) =>
   app.group('/auth', (app) =>
@@ -55,6 +58,24 @@ export const auth = (app: Elysia) =>
           detail: {
             tags: ['Auth'],
             summary: 'Sign Out',
+          },
+        }
+      )
+
+      .use(bearer())
+      .get(
+        '/me',
+        async ({ store }) => {
+          const res = await AuthController.getUserAuthenticatedController(
+            assertAuth(store)
+          )
+          return res
+        },
+        {
+          beforeHandle: requireAuth('CHECK_AUTHENTICATED'),
+          detail: {
+            tags: ['Auth'],
+            summary: 'Get User Authenticated',
           },
         }
       )

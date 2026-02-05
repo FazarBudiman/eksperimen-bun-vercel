@@ -1,7 +1,9 @@
 import { BadRequest } from '../../exceptions/client.error'
 import { AccessTokenPayload } from '../../plugins/jwt/token.schema'
+import { AuthUser } from '../../types/auth.type'
 import { ApiResponse } from '../../types/response.type'
 import { ResponseHelper } from '../../utils/responseHelper'
+import { UserService } from '../user/user.service'
 import { RefreshTokenProps, SignInProps } from './auth.model'
 import { AuthService } from './auth.service'
 
@@ -35,6 +37,17 @@ export class AuthController {
       access_token,
       refresh_token,
     })
+  }
+
+  static async getUserAuthenticatedController(
+    user: AuthUser
+  ): Promise<ApiResponse> {
+    const { user_id } = user
+    const userDetail = await UserService.getUserById(user_id)
+    return ResponseHelper.success(
+      'Berhasil mengambil informasi authenticated user',
+      userDetail
+    )
   }
 
   static async refreshController(

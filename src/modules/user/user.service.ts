@@ -79,7 +79,7 @@ export class UserService {
   static async getUserById(userId: string) {
     const { rows } = await supabasePool.query(
       `SELECT 
-        u.user_id, u.username,
+        u.user_id, u.full_name, u.username,
         u.user_profile_url, r.role_name
       FROM users u
         JOIN roles r ON u.user_role_id = r.role_id
