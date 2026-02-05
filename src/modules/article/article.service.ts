@@ -80,10 +80,12 @@ export class ArticleService {
   static async getArticleById(articleId: string) {
     const { rows } = await supabasePool.query(
       `SELECT 
-        article_id, article_title, article_cover_url, 
-        article_content_blocks, article_content_text, article_status
-      FROM articles 
-      WHERE article_id = $1`,
+        a.article_id, a.article_title, 
+        a.article_cover_url, a.article_content_blocks, 
+        a.article_content_text, a.article_status, 
+        a.created_date, u.full_name
+      FROM articles a  JOIN users u ON a.created_by = u.user_id
+      WHERE a.article_id = = $1`,
       [articleId]
     )
     return rows[0]
