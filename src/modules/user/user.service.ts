@@ -57,8 +57,8 @@ export class UserService {
   static async getUsers() {
     const { rows } = await supabasePool.query(
       `SELECT 
-        u.user_id,u.username,
-        u.user_profile_url,r.role_name
+        u.user_id, u.username, u.full_name,
+        u.user_profile_url, r.role_name
       FROM users u
         JOIN roles r ON u.user_role_id = r.role_id
       WHERE is_deleted = false`
