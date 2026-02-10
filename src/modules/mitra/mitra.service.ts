@@ -23,7 +23,7 @@ export class MitraService {
   static async getAllMitra() {
     const { rows } = await supabasePool.query(
       `SELECT 
-        mitra_name, business_field, mitra_logo_url 
+        mitra_id, mitra_name, business_field, mitra_logo_url 
       FROM mitras 
       WHERE is_deleted = FALSE 
       ORDER BY mitra_name ASC`
@@ -45,7 +45,7 @@ export class MitraService {
   static async getMitraById(mitraId: string) {
     const { rows } = await supabasePool.query(
       `SELECT 
-        mitra_name, business_field, mitra_logo_url 
+        mitra_id, mitra_name, business_field, mitra_logo_url 
       FROM mitras WHERE mitra_id = $1 AND is_deleted = FALSE`,
       [mitraId]
     )

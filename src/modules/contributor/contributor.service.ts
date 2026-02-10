@@ -48,7 +48,7 @@ export class ContributorService {
 
     const { rows } = await supabasePool.query(
       `SELECT 
-        contributor_id, contributor_name, contributor_job_title, 
+        contributor_id, contributor_name, contributor_job_title, contributor_type,
         contributor_company_name, contributor_expertise, contributor_profile_url 
       FROM contributors 
       WHERE ${conditions.join(' AND ')}`,
@@ -70,7 +70,7 @@ export class ContributorService {
   static async getContributorById(contributorId: string) {
     const { rows } = await supabasePool.query(
       `SELECT 
-        contributor_id, contributor_name, contributor_job_title, 
+        contributor_id, contributor_name, contributor_job_title, contributor_type,
         contributor_company_name, contributor_expertise, contributor_profile_url 
       FROM contributors
       WHERE contributor_id = $1 AND is_deleted = FALSE`,
