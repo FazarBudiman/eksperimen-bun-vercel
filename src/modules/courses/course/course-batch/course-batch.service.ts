@@ -147,6 +147,7 @@ export class CourseBatchService {
               'start_time', cs.course_session_start_time,
               'end_time', cs.course_session_end_time
             )
+              ORDER BY cs.course_session_date, cs.course_session_start_time
           ) FILTER (WHERE cs.course_session_id IS NOT NULL),
           '[]'
         ) as sessions
@@ -173,7 +174,7 @@ export class CourseBatchService {
         cp.final_price;`,
       [courseId, batchId]
     )
-    return rows
+    return rows[0] ?? null
   }
 
   static async getCourseBatchByCourseId(courseId: string) {
