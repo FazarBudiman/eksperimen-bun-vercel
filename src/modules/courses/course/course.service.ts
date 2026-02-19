@@ -117,6 +117,7 @@ export class CourseService {
             'name', cb.course_batch_name,
             'status', cb.course_batch_status,
             'posterUrl', cb.course_batch_poster_url,
+            'registration_url', cb.course_batch_registration_url,
             'registration_start', cb.course_batch_registration_start,
             'registration_end', cb.course_batch_registration_end,
             'start_date', cb.course_batch_start_date,
@@ -183,6 +184,7 @@ export class CourseService {
         json_build_object(
           'name', cb.course_batch_name,
           'posterUrl', cb.course_batch_poster_url,
+          'registration_url', cb.course_batch_registration_url,
           'start_date', cb.course_batch_start_date,
           'registration_end', cb.course_batch_registration_end
         ) AS nearest_batch
