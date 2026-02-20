@@ -3,7 +3,8 @@ type EditorJSBlock = {
   data: Record<string, any>
 }
 
-function stripHtml(text: string): string {
+function stripHtml(text: unknown): string {
+  if (typeof text !== 'string') return ''
   return text.replace(/<[^>]*>/g, '')
 }
 
@@ -16,26 +17,26 @@ export async function generateContentText(
     switch (block.type) {
       case 'header':
       case 'paragraph':
-        if (block.data?.text) {
+        if (typeof block.data?.text === 'string') {
           texts.push(stripHtml(block.data.text))
         }
         break
 
       case 'list':
         if (Array.isArray(block.data?.items)) {
-          block.data.items.forEach((item: string) => {
-            texts.push(stripHtml(item))
+          block.data.items.forEach((item: unknown) => {
+            if (typeof item === 'string') {
+              texts.push(stripHtml(item))
+            }
           })
         }
         break
 
       case 'quote':
-        if (block.data?.text) {
+        if (typeof block.data?.text === 'string') {
           texts.push(stripHtml(block.data.text))
         }
         break
-
-      // code, image, embed → intentionally ignored
     }
   }
 
