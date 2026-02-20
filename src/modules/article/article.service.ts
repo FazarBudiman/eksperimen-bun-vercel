@@ -1,32 +1,24 @@
 import { ResourceNotFoundError } from '../../exceptions/client.error'
 import { supabasePool } from '../../supabase/supabasePool'
-import { ArticleProps, UpdateArticleServiceProps } from './article.model'
+import {
+  ArticleProps,
+  QueryArticleStatusProps,
+  UpdateArticleServiceProps,
+} from './article.model'
 
 export class ArticleService {
   static async extractArticleMeta(blocks: any[]) {
     let title: string | null = null
-    let coverUrl: string | null = null
 
     for (const block of blocks) {
       if (!title && block.type === 'header') {
         title = block.data.text
       }
-
-      // if (!coverUrl && block.type === 'image') {
-      //   coverUrl = block.data?.file?.url
-      // }
-
-      // if (title && coverUrl) break
     }
 
     if (!title) {
       throw new Error('Artikel harus memiliki minimal 1 header sebagai judul')
     }
-
-    // if (!coverUrl) {
-    //   throw new Error('Artikel harus memiliki minimal 1 gambar sebagai cover')
-    // }
-
     return { title }
   }
 
@@ -52,37 +44,26 @@ export class ArticleService {
     return rows[0]
   }
 
-  static async addCoverArticle(
-    pageId: string,
-    coverImage: string,
-    coverDescription: string
-  ) {
-    const { rows } = await supabasePool.query(
-      `UPDATE articles SET article_cover_url = $1, article_cover_description = $2
-        WHERE article_id = $3 RETURNING article_title`,
-      [coverImage, coverDescription, pageId]
-    )
-    return rows[0]
-  }
+  static async getAllArticle(query: QueryArticleStatusProps) {
+    const conditions: string[] = ['a.is_deleted = FALSE']
+    const values: any[] = []
+    let idx = 1
 
-  static async getAllArticle() {
+    const { status } = query
+
+    if (status) {
+      conditions.push(`a.article_status =  $${idx}`)
+      values.push(status.toUpperCase())
+    }
     const { rows } = await supabasePool.query(
-      // `SELECT
-      //   article_id, article_title,
-      //   article_cover_url, article_cover_description , article_content_text,
-      //   article_status, created_date
-      // FROM articles
-      // WHERE is_deleted = FALSE
-      //   AND article_status = 'PUBLISHED'`
       `SELECT 
         a.article_id, a.article_title, 
-        a.article_cover_url, a.article_content_blocks, 
-        a.article_cover_description,
-        a.article_content_text, a.article_status, 
-        a.created_date, u.full_name
+        a.article_content_text, a.article_content_blocks, 
+        a.article_cover_url, a.article_cover_description,
+        a.article_status, a.created_date, u.full_name as author
       FROM articles a  JOIN users u ON a.created_by = u.user_id
-      WHERE a.is_deleted = FALSE 
-        AND a.article_status = 'PUBLISHED'`
+      WHERE ${conditions.join(' AND ')}`,
+      values
     )
     return rows
   }
@@ -101,12 +82,11 @@ export class ArticleService {
     const { rows } = await supabasePool.query(
       `SELECT 
         a.article_id, a.article_title, 
-        a.article_cover_url, a.article_content_blocks, 
-        a.article_cover_description,
-        a.article_content_text, a.article_status, 
-        a.created_date, u.full_name
+        a.article_cover_url, a.article_cover_description, 
+        a.article_content_blocks, a.article_content_text, 
+        a.article_status, a.created_date, u.full_name as author
       FROM articles a  JOIN users u ON a.created_by = u.user_id
-      WHERE a.article_id = $1`,
+      WHERE a.article_id = $1 AND a.is_deleted = FALSE`,
       [articleId]
     )
     return rows[0]
@@ -170,6 +150,53 @@ export class ArticleService {
       WHERE article_id = $1 
       RETURNING article_title`,
       [articleId]
+    )
+    return rows[0]
+  }
+
+  static async addCoverArticle(
+    articleId: string,
+    coverImage: string,
+    coverDescription: string
+  ) {
+    const { rows } = await supabasePool.query(
+      `UPDATE articles SET article_cover_url = $1, article_cover_description = $2
+        WHERE article_id = $3 RETURNING article_title`,
+      [coverImage, coverDescription, articleId]
+    )
+    return rows[0]
+  }
+
+  static async updateCoverArticle(
+    articleId: string,
+    coverDescription: string | undefined,
+    coverImage: string | null,
+    userWhoUpdated: string
+  ) {
+    const fields: string[] = []
+    const values: any[] = []
+    let idx = 1
+
+    if (coverDescription !== undefined) {
+      fields.push(`article_cover_description = $${idx++}`)
+      values.push(coverDescription)
+    }
+
+    if (coverImage !== null) {
+      fields.push(`article_cover_url = $${idx++}`)
+      values.push(coverImage)
+    }
+    fields.push(`updated_by = $${idx++}`)
+    values.push(userWhoUpdated)
+
+    fields.push(`updated_date = NOW()`)
+
+    values.push(articleId)
+
+    const { rows } = await supabasePool.query(
+      `UPDATE articles SET ${fields.join(', ')}
+        WHERE article_id = $${idx} RETURNING article_title`,
+      values
     )
     return rows[0]
   }

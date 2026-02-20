@@ -24,24 +24,10 @@ export const ArticleStatus = {
 } as const
 
 export const ArticleUpdateModel = t.Object({
-  // title: t.String({
-  //   minLength: 10,
-  //   error: 'Judul harus merupakan string dan memiliki minimal 10 karakter',
-  // }),
-  // coverUrl: t.Optional(
-  //   t.String({
-  //     format: 'uri',
-  //     error: 'Cover harus berupa URL valid',
-  //   })
-  // ),
-  // contentBlocks: t.Array(contentBlocksModel, {
-  //   minItems: 1,
-  //   error: 'Artikel harus memiliki 1 block',
-  // }),
-  // status: t.Enum(ArticleStatus, {
-  //   error:
-  //     'Status tidak valid. Pilih antara DRAFT, REVIEW, PUBLISHED atau UNPUBLISHED',
-  // }),
+  title: t.String({
+    minLength: 10,
+    error: 'Judul harus merupakan string dan memiliki minimal 10 karakter',
+  }),
   contentBlocks: t.Optional(t.Array(t.Any())),
   status: t.Optional(
     t.Enum(ArticleStatus, {
@@ -52,7 +38,7 @@ export const ArticleUpdateModel = t.Object({
 })
 export type ArticleUpdateProps = Static<typeof ArticleUpdateModel>
 
-// Model Upload Poster Batch
+// Model Add Cover Article
 export const ArticleCoverModel = t.Object({
   cover_image: t.File({
     type: ['image/jpeg', 'image/png', 'image/webp'],
@@ -82,3 +68,14 @@ export type UpdateArticleServiceProps = {
   contentBlocks?: any[]
   status?: string
 }
+
+// Model Query Status Artivle
+export const QueryArticleStatusModel = t.Object({
+  status: t.Optional(
+    t.Enum(ArticleStatus, {
+      error:
+        'Status tidak valid. Pilih antara DRAFT, REVIEW, PUBLISHED atau UNPUBLISHED',
+    })
+  ),
+})
+export type QueryArticleStatusProps = Static<typeof QueryArticleStatusModel>

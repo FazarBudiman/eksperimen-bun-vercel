@@ -10,6 +10,7 @@ import {
   ArticleProps,
   ArticleUpdateProps,
   ParamsArticleProps,
+  QueryArticleStatusProps,
 } from './article.model'
 import { ArticleService } from './article.service'
 
@@ -44,28 +45,10 @@ export class ArticleController {
     return ResponseHelper.created('Menambah article berhasil', articleId)
   }
 
-  static async addCoverArticleController(
-    payload: ArticleCoverProps,
-    params: ParamsArticleProps
+  static async getAllArticleController(
+    query: QueryArticleStatusProps
   ): Promise<ApiResponse> {
-    const { articleId } = params
-    await ArticleService.verifyArticleIsExist(articleId)
-
-    const coverUrl = await upload(payload.cover_image, '/article')
-
-    const { article_title } = await ArticleService.addCoverArticle(
-      articleId,
-      coverUrl,
-      payload.cover_description
-    )
-
-    return ResponseHelper.success(
-      `Menambah cover article pada: ${article_title} berhasil`
-    )
-  }
-
-  static async getAllArticleController(): Promise<ApiResponse> {
-    const articles = await ArticleService.getAllArticle()
+    const articles = await ArticleService.getAllArticle(query)
     return ResponseHelper.success(
       'Mengambil semua data article berhasil',
       articles
@@ -91,7 +74,6 @@ export class ArticleController {
 
     let derivedData: {
       title?: string
-      coverUrl?: string
       contentText?: string
       contentBlocks?: any[]
     } = {}
@@ -131,6 +113,52 @@ export class ArticleController {
     const { article_title } = await ArticleService.deleteArticle(articleId)
     return ResponseHelper.success(
       `Menghapus article : '${article_title}' berhasil`
+    )
+  }
+
+  static async addCoverArticleController(
+    payload: ArticleCoverProps,
+    params: ParamsArticleProps
+  ): Promise<ApiResponse> {
+    const { articleId } = params
+    await ArticleService.verifyArticleIsExist(articleId)
+
+    const coverUrl = await upload(payload.cover_image, '/article')
+
+    const { article_title } = await ArticleService.addCoverArticle(
+      articleId,
+      coverUrl,
+      payload.cover_description
+    )
+
+    return ResponseHelper.success(
+      `Menambah cover article pada: ${article_title} berhasil`
+    )
+  }
+
+  static async updateCoverArticleController(
+    payload: Partial<ArticleCoverProps>,
+    params: ParamsArticleProps,
+    user: AuthUser
+  ): Promise<ApiResponse> {
+    const { articleId } = params
+    await ArticleService.verifyArticleIsExist(articleId)
+
+    let coverUrl: string | null = null
+
+    if (payload.cover_image) {
+      coverUrl = await upload(payload.cover_image, '/article')
+    }
+
+    const { article_title } = await ArticleService.updateCoverArticle(
+      articleId,
+      payload.cover_description,
+      coverUrl,
+      user.user_id
+    )
+
+    return ResponseHelper.success(
+      `Memperbarui cover article: ${article_title} berhasil`
     )
   }
 }
