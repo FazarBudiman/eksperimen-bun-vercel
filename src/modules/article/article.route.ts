@@ -1,11 +1,12 @@
 import bearer from '@elysiajs/bearer'
-import Elysia from 'elysia'
+import Elysia, { t } from 'elysia'
 import { requireAuth } from '../../guards/auth.guard'
 import {
   ArticleCoverModel,
   ArticleModel,
   ArticleUpdateModel,
   ParamsArticleModel,
+  QueryArticleStatusModel,
 } from './article.model'
 import { ArticleController } from './article.controller'
 import { assertAuth } from '../../utils/assertAuth'
@@ -32,31 +33,14 @@ export const article = new Elysia().group('/article', (app) =>
         },
       }
     )
-    .post(
-      '/:articleId/cover',
-      async ({ body, params }) => {
-        const res = await ArticleController.addCoverArticleController(
-          body,
-          params
-        )
-        return res
-      },
-      {
-        beforeHandle: requireAuth('CREATE_ARTICLE'),
-        body: ArticleCoverModel,
-        detail: {
-          tags: ['Article'],
-          summary: 'Add cover for article',
-        },
-      }
-    )
     .get(
       '/',
-      async () => {
-        const res = await ArticleController.getAllArticleController()
+      async ({ query }) => {
+        const res = await ArticleController.getAllArticleController(query)
         return res
       },
       {
+        query: QueryArticleStatusModel,
         detail: {
           tags: ['Article'],
           summary: 'Get All Article',
@@ -111,6 +95,47 @@ export const article = new Elysia().group('/article', (app) =>
         detail: {
           tags: ['Article'],
           summary: 'Delete Article by Id',
+        },
+      }
+    )
+
+    .post(
+      '/:articleId/cover',
+      async ({ body, params }) => {
+        const res = await ArticleController.addCoverArticleController(
+          body,
+          params
+        )
+        return res
+      },
+      {
+        beforeHandle: requireAuth('CREATE_ARTICLE'),
+        body: ArticleCoverModel,
+        params: ParamsArticleModel,
+        detail: {
+          tags: ['Article'],
+          summary: 'Add cover for article',
+        },
+      }
+    )
+
+    .patch(
+      '/:articleId/cover',
+      async ({ body, params, store }) => {
+        const res = await ArticleController.updateCoverArticleController(
+          body,
+          params,
+          assertAuth(store)
+        )
+        return res
+      },
+      {
+        beforeHandle: requireAuth('UPDATE_ARTICLE'),
+        body: t.Partial(ArticleCoverModel),
+        params: ParamsArticleModel,
+        detail: {
+          tags: ['Article'],
+          summary: 'Add cover for article',
         },
       }
     )
